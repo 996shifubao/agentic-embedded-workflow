@@ -17,12 +17,16 @@ if REPO not in sys.path:
 import common  # noqa: E402
 
 MODES = {
-    "gate": (["--task", "tasks/adc_sampling_fix.json"], 3),
-    "full": (["--task", "tasks/adc_sampling_fix.json",
-              "--hardware-report", "fixtures/hardware_report.fixture.json"], 0),
-    "mcp": (["--task", "tasks/adc_sampling_fix.json",
-             "--hardware-report", "fixtures/hardware_report.fixture.json",
-             "--tool-layer", "mcp", "--memory"], 0),
+    "gate": ("runtime.orchestrator", ["--task", "tasks/adc_sampling_fix.json"], 3),
+    "full": ("runtime.orchestrator", ["--task", "tasks/adc_sampling_fix.json",
+                                      "--hardware-report",
+                                      "fixtures/hardware_report.fixture.json"], 0),
+    "mcp": ("runtime.orchestrator", ["--task", "tasks/adc_sampling_fix.json",
+                                     "--hardware-report",
+                                     "fixtures/hardware_report.fixture.json",
+                                     "--tool-layer", "mcp", "--memory"], 0),
+    # True multi-agent: isolated context + tool whitelist + task per role.
+    "multi": ("runtime.multi_agent", ["--task", "tasks/adc_sampling_fix.json"], 0),
 }
 
 
@@ -32,9 +36,9 @@ def main():
     ap.add_argument("--timeout", type=int, default=300)
     a = ap.parse_args()
 
-    args, expected = MODES[a.mode]
+    module, args, expected = MODES[a.mode]
     proc = subprocess.run(
-        [sys.executable, "-m", "runtime.orchestrator"] + args,
+        [sys.executable, "-m", module] + args,
         cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace",
         env=dict(common.ENV), timeout=a.timeout,
     )

@@ -235,9 +235,12 @@ python -m runtime.orchestrator --task tasks/adc_sampling_fix.json --no-kb
 
 ## 6. 诚实边界
 
-- 本仓库当前是**单 Agent + 多角色**（同一 Agent 依次承担 Planner/Developer/Tester/Reviewer）。
-  **不**声称是 Multi-Agent System。只有当每个角色拥有独立上下文、独立工具与独立任务、并由
-  orchestrator 协调时，才升级为 *Multi-Agent Engineering Workflow*。
+- 仓库有两个入口，别混为一谈：**默认**是「单 Agent + 多角色」（同一 Agent 依次承担
+  Planner/Developer/Tester/Reviewer），**不**声称是 Multi-Agent System；
+  `python -m runtime.multi_agent` 才是 *Multi-Agent Engineering Workflow* ——
+  四个角色各自持有独立消息上下文、独立工具白名单与独立任务，角色之间只传符合
+  `schemas/` 的结构化消息（plan → change_report → test_report → review），
+  越权工具调用由 `runtime/policy.py` 拒绝而不是靠提示词。
 - 默认的 `StubRuntime` **不是 LLM**，它是用来验证编排与评测正确性的确定性实现；
   `OpenAIRuntime` 未在本仓库的 demo/CI 中运行过，首次使用前请对照官方文档核对。
 - 实机层（hardware）无法自动判定，必须由人填写；工具只负责记录与汇总。

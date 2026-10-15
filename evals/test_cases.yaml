@@ -465,3 +465,17 @@ cases:
       - path: status
         op: eq
         value: PASS
+
+  - id: e2e-004-multi-agent
+    layer: e2e
+    name: 端到端：真 Multi-Agent（各角色独立上下文/工具/任务，退出码 0）
+    automated: true
+    runner: e2e
+    args: ["--mode", "multi"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.exit_code
+        op: eq
+        value: 0
