@@ -62,3 +62,14 @@ jobs:
             evals/report.md
             evals/report.json
             traces/**
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the harness image
+        run: docker build -t agentic-embedded-workflow .
+
+      - name: Run the evaluation suite inside the image
+        run: docker run --rm agentic-embedded-workflow
