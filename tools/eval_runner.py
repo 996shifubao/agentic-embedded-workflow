@@ -32,6 +32,7 @@ RUNNERS = {
     "memory": "memory_eval.py",
     "security": "policy_check.py",
     "budget": "budget_check.py",
+    "e2e": "e2e_check.py",
 }
 
 
@@ -141,7 +142,27 @@ def summarize(results):
     for r in results:
         summary[r["status"]] = summary.get(r["status"], 0) + 1
     summary["total"] = len(results)
+    by_layer = {}
+    for r in results:
+        layer = r.get("layer") or "unknown"
+        bucket = by_layer.setdefault(layer, {"total": 0, "PASS": 0, "FAIL": 0,
+                                             "PENDING": 0, "ERROR": 0})
+        bucket["total"] += 1
+        bucket[r["status"]] = bucket.get(r["status"], 0) + 1
+    summary["by_layer"] = by_layer
     return summary
+
+
+def failure_clusters(results):
+    """Group failures by layer + the assertion that broke, so patterns surface."""
+    clusters = {}
+    for r in results:
+        if r["status"] not in ("FAIL", "ERROR"):
+            continue
+        paths = [c["path"] for c in (r.get("checks") or []) if not c.get("ok")]
+        for path in paths or [r.get("detail") or "unknown"]:
+            clusters.setdefault("%s :: %s" % (r.get("layer"), path), []).append(r["id"])
+    return clusters
 
 
 def write_markdown(path, report):
@@ -166,6 +187,15 @@ def write_markdown(path, report):
         elif r.get("observed"):
             detail = "observed: %s" % r["observed"]
         lines.append("| %s | %s | %s | %s |" % (r["id"], r.get("layer"), r["status"], detail))
+    lines += ["", "## Coverage by layer", "", "| layer | total | PASS | PENDING | FAIL | ERROR |",
+              "|---|---|---|---|---|---|"]
+    for layer, counts in sorted((report.get("coverage") or {}).items()):
+        lines.append("| %s | %d | %d | %d | %d | %d |" % (
+            layer, counts["total"], counts.get("PASS", 0), counts.get("PENDING", 0),
+            counts.get("FAIL", 0), counts.get("ERROR", 0)))
+    lines += ["", "## Failure clusters", ""]
+    lines += ["- `%s` -> %s" % (k, ", ".join(v))
+              for k, v in sorted((report.get("failure_clusters") or {}).items())] or ["- none"]
     common.write_text(path, "\n".join(lines) + "\n")
 
 
@@ -188,6 +218,8 @@ def main():
         "summary": summarize(results),
         "thresholds": thresholds,
         "cases": results,
+        "coverage": summarize(results)["by_layer"],
+        "failure_clusters": failure_clusters(results),
     }
     common.write_text(os.path.join(REPO, a.out_json), json.dumps(report, ensure_ascii=False, indent=2))
     write_markdown(os.path.join(REPO, a.out_md), report)

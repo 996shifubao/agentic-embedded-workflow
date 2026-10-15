@@ -224,3 +224,244 @@ cases:
       - path: metrics.budget_refusals
         op: ge
         value: 1
+
+  # ---- 扩容（2026-10-15）：多参数用例 + 端到端 + 回归，全部由既有 runner 驱动 ----
+  - id: log-002-adc-before
+    layer: log
+    name: ADC 复现日志（复现规则集）自证
+    automated: true
+    runner: log
+    args: ["examples/adc_sampling_bug/input/serial_before.log", "--rules", "evals/log_rules/adc_repro.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: passed
+        op: ge
+        value: 5
+      - path: failed
+        op: eq
+        value: 0
+
+  - id: log-003-adc-after
+    layer: log
+    name: ADC 修复日志（修复规则集）自证
+    automated: true
+    runner: log
+    args: ["examples/adc_sampling_bug/input/serial_after.log", "--rules", "evals/log_rules/adc_fixed.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: passed
+        op: ge
+        value: 5
+      - path: failed
+        op: eq
+        value: 0
+
+  - id: log-004-pwm-before
+    layer: log
+    name: UCC20225 复现日志自证
+    automated: true
+    runner: log
+    args: ["examples/pwm_issue/input/serial_before.log", "--rules", "evals/log_rules/pwm_before.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: passed
+        op: ge
+        value: 4
+
+  - id: log-005-pwm-after
+    layer: log
+    name: UCC20225 修复日志自证
+    automated: true
+    runner: log
+    args: ["examples/pwm_issue/input/serial_after.log", "--rules", "evals/log_rules/pwm_after.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: passed
+        op: ge
+        value: 4
+
+  - id: static-002-findings-locked
+    layer: static
+    name: 静态检查结果锁定（findings=3，防误报膨胀）
+    automated: true
+    runner: static
+    args: ["--diff", "samples/sample.diff"]
+    expect:
+      - path: findings_count
+        op: eq
+        value: 3
+
+  - id: static-003-rule-cr003
+    layer: static
+    name: 静态规则 CR-003 必须命中
+    automated: true
+    runner: static
+    args: ["--diff", "samples/sample.diff"]
+    expect:
+      - path: rules_triggered
+        op: contains
+        value: CR-003
+
+  - id: rag-003-recall-at-5
+    layer: rag
+    name: 检索质量（k=5）不退化
+    automated: true
+    runner: rag
+    args: ["--cases", "evals/rag_cases.yaml", "--k", "5"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.recall_at_k
+        op: ge
+        value: ${rag_recall3_min}
+
+  - id: rag-004-recall-at-10
+    layer: rag
+    name: 检索质量（k=10）不退化
+    automated: true
+    runner: rag
+    args: ["--cases", "evals/rag_cases.yaml", "--k", "10"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+
+  - id: rag-005-vector-k5
+    layer: rag
+    name: 混合检索（k=5）与词法持平
+    automated: true
+    runner: vector
+    args: ["--cases", "evals/rag_cases.yaml", "--k", "5"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.hybrid_recall_at_k
+        op: ge
+        value: ${vector_recall3_min}
+
+  - id: rag-006-vector-k10
+    layer: rag
+    name: 混合检索（k=10）与词法持平
+    automated: true
+    runner: vector
+    args: ["--cases", "evals/rag_cases.yaml", "--k", "10"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+
+  - id: memory-002-wider-k
+    layer: agent
+    name: 项目记忆（k=5）仍能取回历史决策
+    automated: true
+    runner: memory
+    args: ["--k", "5"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.recall_at_k
+        op: ge
+        value: 1.0
+
+  - id: security-002-audit-path
+    layer: security
+    name: 审计可写入独立路径
+    automated: true
+    runner: security
+    args: ["--audit", "traces/audit_case002.jsonl"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.guarded_tools
+        op: ge
+        value: 2
+
+  - id: security-003-checks
+    layer: security
+    name: 安全边界检查项不少于 8 条
+    automated: true
+    runner: security
+    args: ["--audit", "traces/audit_case003.jsonl"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.checks
+        op: ge
+        value: 8
+
+  - id: e2e-001-human-gate
+    layer: e2e
+    name: 端到端：无实机记录时停在人工闸门（退出码 3）
+    automated: true
+    runner: e2e
+    args: ["--mode", "gate"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.exit_code
+        op: eq
+        value: 3
+
+  - id: e2e-002-done
+    layer: e2e
+    name: 端到端：提供实机记录后完成（退出码 0）
+    automated: true
+    runner: e2e
+    args: ["--mode", "full"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.exit_code
+        op: eq
+        value: 0
+
+  - id: e2e-003-mcp-memory
+    layer: e2e
+    name: 端到端：MCP 工具层 + 项目记忆路径（退出码 0）
+    automated: true
+    runner: e2e
+    args: ["--mode", "mcp"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.exit_code
+        op: eq
+        value: 0
+
+  - id: regression-001-adc-log
+    layer: regression
+    name: 回归：ADC 修复后日志断言仍成立
+    automated: true
+    runner: log
+    args: ["examples/adc_sampling_bug/input/serial_after.log", "--rules", "evals/log_rules/adc_fixed.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+
+  - id: regression-002-pwm-log
+    layer: regression
+    name: 回归：UCC20225 修复后日志断言仍成立
+    automated: true
+    runner: log
+    args: ["examples/pwm_issue/input/serial_after.log", "--rules", "evals/log_rules/pwm_after.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
