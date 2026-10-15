@@ -33,6 +33,7 @@ RUNNERS = {
     "security": "policy_check.py",
     "budget": "budget_check.py",
     "e2e": "e2e_check.py",
+    "scenario": "field_scenario.py",
 }
 
 

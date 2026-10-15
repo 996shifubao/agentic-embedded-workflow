@@ -479,3 +479,23 @@ cases:
       - path: metrics.exit_code
         op: eq
         value: 0
+
+  - id: scenario-001-field-ticket
+    layer: scenario
+    name: 业务场景：客户现场工单 → 带引用的根因报告与客户回复稿
+    automated: true
+    runner: scenario
+    args: []
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.kb_citations
+        op: ge
+        value: 1
+      - path: metrics.hypotheses
+        op: ge
+        value: 3
+      - path: metrics.report_chars
+        op: ge
+        value: 600
