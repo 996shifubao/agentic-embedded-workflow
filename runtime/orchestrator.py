@@ -54,7 +54,12 @@ class Tracer:
 
 
 def run(task_path, runtime_name, hardware_report, max_iterations, tool_layer="local", use_kb=True, kb_k=3,
-        use_memory=False, memory_k=3):
+        use_memory=False, memory_k=3, approvals=()):
+    from runtime import policy
+
+    # The orchestrator's own pipeline is human-launched (that is what the explicit
+    # human gate formalises); remote MCP callers are not, and stay unapproved.
+    policy.set_approvals(["build", "run_algorithm"] + [a for a in approvals if a])
     with open(task_path, "r", encoding="utf-8") as f:
         task = json.load(f)
 
@@ -133,6 +138,19 @@ def run(task_path, runtime_name, hardware_report, max_iterations, tool_layer="lo
     tracer.log(state, "memory_search", {"hits": result["memory"]})
     if memory:
         print("[memory] %d hit(s): %s" % (len(memory), ", ".join(h["citation"] for h in memory)))
+
+    # Untrusted text (retrieved documents, memory excerpts) is sanitised before it
+    # can reach a prompt; stripped payloads are recorded, not silently dropped.
+    guard_findings = []
+    for hit in knowledge:
+        hit["snippet"], found = policy.sanitize(hit.get("snippet", ""), hit.get("citation", ""))
+        guard_findings.extend(found)
+    memory_digest, found = policy.sanitize(memory_digest, "memory")
+    guard_findings.extend(found)
+    if guard_findings:
+        tracer.log(state, "injection_guard", {"findings": guard_findings})
+        print("[guard] stripped %d instruction-like line(s) from retrieved text"
+              % len(guard_findings))
 
     plan = runtime.run(agents["planner"], {"task": task, "knowledge": knowledge,
                                            "memory": memory, "memory_digest": memory_digest})
@@ -325,6 +343,7 @@ def main():
     ap.add_argument("--kb-k", type=int, default=3)
     ap.add_argument("--memory", action="store_true", help="inject past-run memory into planning")
     ap.add_argument("--memory-k", type=int, default=3)
+    ap.add_argument("--approve", default="", help="extra tool approvals, e.g. run_script")
     a = ap.parse_args()
     try:
         code, result = run(
@@ -337,6 +356,7 @@ def main():
         kb_k=a.kb_k,
         use_memory=a.memory,
         memory_k=a.memory_k,
+        approvals=[t for t in (a.approve or "").split(",") if t],
         )
     except RuntimeUnavailable as e:
         print("[orchestrator] runtime unavailable: %s" % e)

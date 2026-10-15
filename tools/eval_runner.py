@@ -30,6 +30,7 @@ RUNNERS = {
     "mcp": "mcp_call.py",
     "vector": "vector_eval.py",
     "memory": "memory_eval.py",
+    "security": "policy_check.py",
 }
 
 

@@ -239,3 +239,11 @@ def get_prompt(name):
         "messages": [{"role": "user", "content": {"type": "text", "text": text}}],
     }
 
+
+# Every catalogue entry carries the same policy the executors enforce, so a
+# remote client can see which tools are read-only and which need human approval.
+from runtime.policy import TOOL_POLICY, DEFAULT_POLICY  # noqa: E402
+
+for _tool in TOOLS:
+    _tool["policy"] = dict(TOOL_POLICY.get(_tool["name"], DEFAULT_POLICY))
+

@@ -12,6 +12,7 @@ if REPO not in sys.path:
     sys.path.insert(0, REPO)
 
 from mcp.client import McpClient  # noqa: E402
+from runtime import policy  # noqa: E402
 from runtime.tool_exec import ToolExecutor  # noqa: E402
 
 
@@ -22,19 +23,28 @@ class McpToolExecutor:
         self.client = McpClient(self.repo)
         self.handshake = self.client.initialize()
         self.tools = [t["name"] for t in self.client.list_tools()]
+        self.audit = policy.AuditLog(self.repo)
+
+    def _call(self, name, args):
+        """Policy gate for remote callers: human-gated tools need approval."""
+        allowed, reason = policy.check(name)
+        self.audit.record(name, "allow" if allowed else "deny", reason, args, actor="mcp-client")
+        if not allowed:
+            return {"status": "DENIED", "tool": name, "reason": reason}
+        return self.client.call_tool(name, args)
 
     # ---------- same surface as ToolExecutor ----------
     def build(self, config):
-        return self.client.call_tool("build", {"config": config})
+        return self._call("build", {"config": config})
 
     def static_diff(self, diff_path):
-        return self.client.call_tool("static_diff", {"diff": diff_path})
+        return self._call("static_diff", {"diff": diff_path})
 
     def log_check(self, logfile, rules):
-        return self.client.call_tool("log_check", {"logfile": logfile, "rules": rules})
+        return self._call("log_check", {"logfile": logfile, "rules": rules})
 
     def algorithm(self, cmd):
-        return self.client.call_tool("run_algorithm", {"cmd": cmd})
+        return self._call("run_algorithm", {"cmd": cmd})
 
     def run_script(self, script, args=()):
         """Repo-local scripts are executed in-process by design.

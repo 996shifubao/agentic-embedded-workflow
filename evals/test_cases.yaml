@@ -190,3 +190,20 @@ cases:
       - path: metrics.recall_at_k
         op: ge
         value: 1.0
+
+  - id: security-001-tool-policy
+    layer: security
+    name: 工具级策略：白名单、危险动作人工批准、注入消毒、审计留痕
+    automated: true
+    runner: security
+    args: []
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.injection_findings
+        op: ge
+        value: 2
+      - path: metrics.audit_entries
+        op: ge
+        value: 3

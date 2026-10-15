@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+from runtime import policy
+
 
 class ToolExecutor:
     def __init__(self, repo_root):
@@ -12,6 +14,10 @@ class ToolExecutor:
 
     def call(self, tool, args, timeout=900):
         """Run tools/<tool>.py and parse its JSON stdout."""
+        # Every execution is audited; policy enforcement for remote callers lives
+        # at the MCP boundary (see runtime/mcp_bridge.py).
+        gate_tool = policy.SCRIPT_TO_TOOL.get(os.path.basename(tool), os.path.basename(tool))
+        policy.AuditLog(self.repo).record(gate_tool, "allow", "local executor", {"args": list(args)})
         cmd = [sys.executable, os.path.join(self.repo, "tools", tool)] + list(args)
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
         p = subprocess.run(
