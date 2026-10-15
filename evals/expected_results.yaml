@@ -1,0 +1,12 @@
+# 验收阈值。用例里用 ${key} 引用，避免阈值散落在多处。
+# 修改阈值必须与实现改动分开提交，否则评测会退化成"迁就实现"。
+thresholds:
+  mae_deg_max: 1.0
+  adc_rms_max: 5.0
+  update_rate_hz_min: 900
+  pwm_output_freq_min: 39000
+  build_warnings_max: 2
+  rag_recall3_min: 0.9
+  rag_mrr_min: 0.8
+  mcp_tools_min: 6
+  vector_recall3_min: 0.9

@@ -1,0 +1,9 @@
+[000.001] BOOT h743-motor fw=0.9.3
+[000.005] gate_driver=ucc20225 deadtime=350ns
+[000.010] pwm_set duty=0.30 tim1_ch1
+[000.011] probe pwm_input_ok=true pwm_input_freq=40000
+[000.012] probe pwm_output_ok=false pwm_output_freq=0
+[000.013] ERR_DRV no output on phase A
+[000.020] pwm_set duty=0.30 tim1_ch1
+[000.021] probe pwm_input_ok=true pwm_output_ok=false
+[000.022] ERR_DRV no output on phase A

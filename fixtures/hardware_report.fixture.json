@@ -1,0 +1,12 @@
+{
+  "case_id": "adc-003-hardware",
+  "operator": "fixture",
+  "timestamp": "2026-01-01T00:00:00+08:00",
+  "measured": {
+    "adc_rms": 2.8,
+    "pwm_freq_hz": 40002,
+    "scope_result": "PASS"
+  },
+  "attachments": [],
+  "notes": "FIXTURE ONLY - used by CI to exercise the human gate. Not a bench measurement. Replace with evals/runs/adc-003-hardware.json from a real test."
+}

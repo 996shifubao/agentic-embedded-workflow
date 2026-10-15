@@ -1,0 +1,9 @@
+[000.001] BOOT h743-motor fw=0.9.4
+[000.003] PWM init tim1 fsw=40000Hz deadtime=350ns mode=center-aligned
+[000.004] ADC init adc1_in5 trigger=tim1_trgo sample_time=8.5cyc
+[000.010] calib zero_offset_calibrated=true zero_offset=2047.8
+[000.020] duty=0.50 sample_offset_us=12.0 adc_raw=2049 adc_settled=true
+[000.021] duty=0.50 sample_offset_us=12.0 adc_raw=2050 adc_settled=true
+[000.030] stat adc_rms=3 samples=64
+[000.031] update_rate_hz=1000 latency_us=210 jitter_us=35
+[000.032] OK run_complete=true

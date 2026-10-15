@@ -1,0 +1,19 @@
+# 断言修复后的日志通过验收。
+assertions:
+  - id: fix-zero-offset
+    type: must_contain
+    pattern: "zero_offset_calibrated=true"
+  - id: fix-settled
+    type: must_contain
+    pattern: "adc_settled=true"
+  - id: fix-no-spurious-trigger
+    type: must_not_contain
+    pattern: "ERR_ADC_TRIG"
+  - id: fix-adc-rms
+    type: max_value
+    pattern: "adc_rms=([0-9.]+)"
+    limit: 5
+  - id: fix-update-rate
+    type: min_value
+    pattern: "update_rate_hz=([0-9]+)"
+    limit: 900

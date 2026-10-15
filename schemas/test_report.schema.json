@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "test_report",
+  "description": "Tester 输出：各层评测结果 + 是否需要人工实机验证",
+  "type": "object",
+  "required": ["task_id", "layers", "overall", "hardware_required", "hardware_cases"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "layers": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "enum": ["PASS", "FAIL", "SKIPPED", "PENDING"] }
+    },
+    "overall": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "hardware_required": { "type": "boolean" },
+    "hardware_cases": { "type": "array", "items": { "type": "string" } },
+    "evidence": { "type": "array", "items": { "type": "string" } }
+  }
+}

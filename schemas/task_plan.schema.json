@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "task_plan",
+  "description": "Planner 输出：把目标变成可执行、可验收的任务",
+  "type": "object",
+  "required": ["task_id", "objective", "files", "constraints", "acceptance"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "objective": { "type": "string", "minLength": 1 },
+    "files": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "acceptance": {
+      "type": "object",
+      "required": ["build", "regression"],
+      "properties": {
+        "build": { "type": "string", "enum": ["PASS"] },
+        "regression": { "type": "string", "enum": ["PASS"] },
+        "adc_rms_max": { "type": "number" }
+      }
+    },
+    "hardware_layers": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } }
+  }
+}

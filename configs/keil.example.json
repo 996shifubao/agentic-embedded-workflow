@@ -1,0 +1,7 @@
+{
+  "name": "STM32H743 six-motor control board",
+  "toolchain": "UV4",
+  "command": "",
+  "cwd": ".",
+  "notes": "真实项目里把 command 改成例如 'UV4 -b firmware/H743.uvprojx -o build.log'，或换成 cmake/ninja/make 调用。留空且工具链不在 PATH 时，状态为 SKIPPED。"
+}

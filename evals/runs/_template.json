@@ -1,0 +1,10 @@
+{
+  "case_id": "<case-id>",
+  "operator": "human",
+  "timestamp": "2026-01-01T10:00:00+08:00",
+  "measured": {
+    "example_metric": 0
+  },
+  "attachments": ["scope_in.png", "scope_out.png"],
+  "notes": "填写：接了什么线、怎么测、看到什么现象"
+}

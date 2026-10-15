@@ -1,0 +1,64 @@
+name: eval
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run evaluation harness
+        run: python tools/eval_runner.py --cases evals/test_cases.yaml --expected evals/expected_results.yaml
+
+      - name: Build knowledge-base index
+        run: python tools/kb_build.py
+
+      - name: MCP tool-layer conformance
+        run: python tools/mcp_call.py --check
+
+      - name: Agent metrics dashboard
+        run: python tools/metrics.py
+
+      - name: Project memory retrieval
+        run: python tools/memory_eval.py
+
+      - name: Vector + hybrid retrieval comparison
+        run: python tools/vector_eval.py --cases evals/rag_cases.yaml --k 3
+
+      - name: Orchestrator stops at the human gate (exit 3)
+        run: |
+          set +e
+          python -m runtime.orchestrator --task tasks/adc_sampling_fix.json
+          code=$?
+          set -e
+          echo "orchestrator exit code: $code"
+          test "$code" -eq 3
+
+      - name: Orchestrator completes when a hardware record is supplied (exit 0)
+        run: |
+          python -m runtime.orchestrator --task tasks/adc_sampling_fix.json \
+            --hardware-report fixtures/hardware_report.fixture.json
+
+      - name: Orchestrator with the MCP tool layer (retrieval-augmented planning)
+        run: |
+          python -m runtime.orchestrator --task tasks/adc_sampling_fix.json \
+            --hardware-report fixtures/hardware_report.fixture.json \
+            --tool-layer mcp
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: |
+            evals/report.md
+            evals/report.json
+            traces/**

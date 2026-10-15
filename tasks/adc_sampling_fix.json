@@ -1,0 +1,26 @@
+{
+  "task_id": "adc-001",
+  "title": "Move the ADC sampling window away from the PWM switching edge",
+  "workspace_fixture": "examples/adc_sampling_bug/sim",
+  "files": ["adc.c"],
+  "constraints": [
+    "Do not change PWM frequency",
+    "Keep existing communication protocol",
+    "Only touch files listed in this plan"
+  ],
+  "acceptance": {
+    "build": "PASS",
+    "regression": "PASS",
+    "adc_rms_max": 5
+  },
+  "build": {
+    "command": "{python} examples/adc_sampling_bug/sim/build_check.py --src {src}"
+  },
+  "hardware_required": true,
+  "hardware_cases": ["adc-003-hardware"],
+  "hardware_layers": ["adc_rms", "pwm_output"],
+  "risks": [
+    "Sampling inside the ringing window also causes spurious ADC triggers",
+    "Changing the offset too far reduces available conversion time"
+  ]
+}

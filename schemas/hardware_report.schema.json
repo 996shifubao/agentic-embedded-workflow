@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "hardware_report",
+  "description": "Human Gate 输入：人工实机测量的结构化证据",
+  "type": "object",
+  "required": ["case_id", "operator", "timestamp", "measured"],
+  "properties": {
+    "case_id": { "type": "string", "minLength": 1 },
+    "operator": { "type": "string", "enum": ["human", "fixture"] },
+    "timestamp": { "type": "string", "minLength": 1 },
+    "measured": { "type": "object" },
+    "attachments": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  }
+}

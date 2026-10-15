@@ -1,0 +1,19 @@
+# 断言"ADC 采样窗口落在振铃区"这一 Bug 被复现。
+assertions:
+  - id: bug-spurious-trigger
+    type: must_contain
+    pattern: "ERR_ADC_TRIG"
+  - id: bug-not-settled
+    type: must_contain
+    pattern: "adc_settled=false"
+  - id: bug-early-sample
+    type: must_contain
+    pattern: "sample_offset_us=5.0"
+  - id: bug-rms-high
+    type: min_value
+    pattern: "adc_rms=([0-9.]+)"
+    limit: 10
+  - id: bug-repeatable
+    type: regex_count_min
+    pattern: "ERR_ADC_TRIG"
+    limit: 2

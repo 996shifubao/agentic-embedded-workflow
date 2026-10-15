@@ -1,0 +1,48 @@
+# 检索质量用例：query 应当在前 k 条命中 expect_path_contains 指向的文档。
+# 期望值是"真正回答这个问题的文档"，不是"想让模型答出来的文档"。
+cases:
+  - id: rag-adc-window
+    query: ADC 采样窗口 落在开关振铃区
+    expect_path_contains: examples/adc_sampling_bug
+  - id: rag-pwm-no-output
+    query: UCC20225 输入有 PWM 输出无波形
+    expect_path_contains: examples/pwm_issue
+  - id: rag-axis-estimation
+    query: 六脉冲 二维电流增量 轴线估计
+    expect_path_contains: examples/motor_control
+  - id: rag-eval-layers
+    query: 八层评测 compile unit static log algorithm hardware regression agent
+    expect_path_contains: docs/eval-methodology
+  - id: rag-coding-rules
+    query: 中断 阻塞 调用 魔法数 编码规则
+    expect_path_contains: prompts/coding_rules
+  - id: rag-hardware-constraints
+    query: 硬件约束 示波器 限流电源 人工填写
+    expect_path_contains: prompts/hardware_constraints
+  - id: rag-planner-contract
+    query: Planner 只读 权限 计划 完成标准
+    expect_path_contains: agents/planner
+  - id: rag-tester-contract
+    query: Tester 跑自动化层 失败证据 PENDING 交接
+    expect_path_contains: agents/tester
+  - id: rag-reviewer-contract
+    query: Reviewer 归因 失败 迭代 结论
+    expect_path_contains: agents/reviewer
+  - id: rag-task-plan-schema
+    query: task_plan schema 校验 计划结构
+    expect_path_contains: schemas/task_plan
+  - id: rag-log-rules
+    query: 日志断言规则 adc_fixed must_contain
+    expect_path_contains: evals/log_rules
+  - id: rag-human-gate
+    query: human-in-the-loop 实机闸门 状态机 退出码
+    expect_path_contains: README.md
+  - id: rag-knowledge-base-doc
+    query: RAG 知识库 检索 引用 分块 BM25
+    expect_path_contains: docs/rag-knowledge-base
+  - id: rag-mcp-doc
+    query: MCP 工具层 resources prompts JSON-RPC
+    expect_path_contains: docs/mcp-tool-layer
+  - id: rag-agents-context
+    query: AGENTS.md AI Agent 工程上下文 硬约束
+    expect_path_contains: AGENTS.md

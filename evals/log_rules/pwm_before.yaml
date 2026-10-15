@@ -1,0 +1,15 @@
+# 断言"输入 PWM 正常、输出无波形"的现象被捕获。
+assertions:
+  - id: pwm-input-ok
+    type: must_contain
+    pattern: "pwm_input_ok=true"
+  - id: pwm-output-missing
+    type: must_contain
+    pattern: "pwm_output_ok=false"
+  - id: drv-error-flagged
+    type: must_contain
+    pattern: "ERR_DRV"
+  - id: drv-error-repeatable
+    type: regex_count_min
+    pattern: "ERR_DRV"
+    limit: 2

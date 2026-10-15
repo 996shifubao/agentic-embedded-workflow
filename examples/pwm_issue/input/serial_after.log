@@ -1,0 +1,8 @@
+[000.001] BOOT h743-motor fw=0.9.5
+[000.005] gate_driver=ucc20225 deadtime=350ns
+[000.010] pwm_set duty=0.30 tim1_ch1
+[000.011] probe pwm_input_ok=true pwm_input_freq=40000
+[000.012] probe pwm_output_ok=true pwm_output_freq=40000
+[000.020] motor current_ma=120 speed_rpm=300
+[000.021] rework=qfn_refow note="cold joint on UCC20225 pin"
+[000.030] OK run_complete=true

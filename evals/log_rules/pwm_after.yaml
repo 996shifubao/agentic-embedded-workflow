@@ -1,0 +1,15 @@
+# 断言返修后的日志通过验收（并保留硬件层人工确认）。
+assertions:
+  - id: pwm-input-ok
+    type: must_contain
+    pattern: "pwm_input_ok=true"
+  - id: pwm-output-ok
+    type: must_contain
+    pattern: "pwm_output_ok=true"
+  - id: pwm-no-drv-error
+    type: must_not_contain
+    pattern: "ERR_DRV"
+  - id: pwm-output-freq
+    type: min_value
+    pattern: "pwm_output_freq=([0-9]+)"
+    limit: 39000

@@ -1,0 +1,11 @@
+[000.001] BOOT h743-motor fw=0.9.3
+[000.003] PWM init tim1 fsw=40000Hz deadtime=350ns mode=center-aligned
+[000.004] ADC init adc1_in5 trigger=tim1_trgo sample_time=8.5cyc
+[000.010] calib zero_offset_calibrated=true zero_offset=2047.5
+[000.020] duty=0.50 sample_offset_us=5.0 adc_raw=2088 adc_settled=false
+[000.021] WARN sample window inside switching ringing
+[000.022] ERR_ADC_TRIG spurious trigger detected
+[000.023] duty=0.50 sample_offset_us=5.0 adc_raw=2091 adc_settled=false
+[000.024] ERR_ADC_TRIG spurious trigger detected
+[000.030] stat adc_rms=23 samples=64
+[000.031] stat speed_rpm=0 current_ma=0

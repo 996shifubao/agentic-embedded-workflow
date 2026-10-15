@@ -1,0 +1,4 @@
+task_id,agent_iterations,build_runs,test_runs,manual_edits,first_pass,human_minutes,failure_type
+adc-001,3,4,3,1,false,45,timing
+pwm-001,2,2,1,0,true,20,
+motor-001,2,1,3,0,true,30,

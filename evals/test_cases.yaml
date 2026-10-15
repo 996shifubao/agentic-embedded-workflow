@@ -1,0 +1,192 @@
+# 分层用例。便宜的先跑。
+# automated: true  -> eval_runner 调用 tools/<runner>.py 并与 expect 比对
+# automated: false -> eval_runner 读取 evals/runs/<id>.json（人工填写），缺失记 PENDING
+cases:
+  - id: adc-001-repro-log
+    layer: log
+    name: ADC 采样窗口落在开关振铃区（复现）
+    automated: true
+    runner: log
+    args: ["examples/adc_sampling_bug/input/serial_before.log", "--rules", "evals/log_rules/adc_repro.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: failed
+        op: eq
+        value: 0
+
+  - id: adc-002-fixed-log
+    layer: log
+    name: ADC 采样窗口后移后（修复验证）
+    automated: true
+    runner: log
+    args: ["examples/adc_sampling_bug/input/serial_after.log", "--rules", "evals/log_rules/adc_fixed.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: passed
+        op: ge
+        value: 5
+
+  - id: pwm-001-repro-log
+    layer: log
+    name: UCC20225 输入有 PWM、输出无波形（复现）
+    automated: true
+    runner: log
+    args: ["examples/pwm_issue/input/serial_before.log", "--rules", "evals/log_rules/pwm_before.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+
+  - id: pwm-002-fixed-log
+    layer: log
+    name: UCC20225 返修后输出恢复（修复验证）
+    automated: true
+    runner: log
+    args: ["examples/pwm_issue/input/serial_after.log", "--rules", "evals/log_rules/pwm_after.yaml"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+
+  - id: static-001-diff-rules
+    layer: static
+    name: diff 静态规则检查（应检出中断内阻塞调用与魔法数）
+    automated: true
+    runner: static
+    args: ["--diff", "samples/sample.diff"]
+    expect:
+      - path: rules_triggered
+        op: contains
+        value: CR-001
+      - path: rules_triggered
+        op: contains
+        value: CR-003
+      - path: findings_count
+        op: ge
+        value: 3
+
+  - id: motor-001-axis-estimation
+    layer: algorithm
+    name: 六脉冲二维电流增量 -> LS 连续轴线估计
+    automated: true
+    runner: test
+    args: ["--cmd", "{python} examples/motor_control/scripts/estimate_axis.py examples/motor_control/input/six_pulse_samples.csv"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.mae_ls_deg
+        op: le
+        value: ${mae_deg_max}
+      - path: metrics.mae_maxch_deg
+        op: gt
+        value: ${mae_deg_max}
+
+  - id: compile-001-h743
+    layer: compile
+    name: H743 固件编译（无工具链时记为 SKIPPED）
+    automated: true
+    runner: build
+    args: ["--config", "configs/keil.example.json"]
+    expect:
+      - path: status
+        op: in
+        value: [PASS, SKIPPED]
+      - path: errors
+        op: eq
+        value: 0
+
+  - id: rag-001-retrieval-quality
+    layer: rag
+    name: 知识库检索质量（15 条查询 recall@3）
+    automated: true
+    runner: rag
+    args: ["--cases", "evals/rag_cases.yaml", "--k", "3"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.recall_at_k
+        op: ge
+        value: ${rag_recall3_min}
+      - path: metrics.mrr
+        op: ge
+        value: ${rag_mrr_min}
+
+  - id: mcp-001-conformance
+    layer: mcp
+    name: MCP 工具层一致性（握手 + tools + resources + prompts + 真实调用）
+    automated: true
+    runner: mcp
+    args: ["--check"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: tools_count
+        op: ge
+        value: ${mcp_tools_min}
+      - path: resources_count
+        op: ge
+        value: 10
+      - path: kb_hits
+        op: ge
+        value: 1
+      - path: log_check_status
+        op: eq
+        value: PASS
+
+  - id: pwm-003-hardware
+    layer: hardware
+    name: 实机确认驱动输出（人工：示波器测相 A 输出）
+    automated: false
+    runner: manual
+    expect:
+      - path: measured.pwm_output_ok
+        op: eq
+        value: true
+
+  - id: adc-003-hardware
+    layer: hardware
+    name: 实机确认 ADC 有效位（人工：限流电源 + 串口统计）
+    automated: false
+    runner: manual
+    expect:
+      - path: measured.adc_rms
+        op: le
+        value: ${adc_rms_max}
+
+  - id: rag-002-vector-hybrid
+    layer: rag
+    name: 向量检索 + BM25 混合（对比词法基线，不允许变差）
+    automated: true
+    runner: vector
+    args: ["--cases", "evals/rag_cases.yaml", "--k", "3"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.hybrid_recall_at_k
+        op: ge
+        value: ${vector_recall3_min}
+
+  - id: memory-001-project-memory
+    layer: agent
+    name: 跨任务项目记忆（从 trace 取回历史决策与失败原因）
+    automated: true
+    runner: memory
+    args: ["--k", "3"]
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.tasks
+        op: ge
+        value: 1
+      - path: metrics.recall_at_k
+        op: ge
+        value: 1.0

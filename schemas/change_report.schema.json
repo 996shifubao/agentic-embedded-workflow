@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "change_report",
+  "description": "Developer 输出：改了什么、怎么改、构建结果",
+  "type": "object",
+  "required": ["task_id", "iteration", "edits", "changed_files", "build", "notes"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "iteration": { "type": "integer", "minimum": 1 },
+    "edits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "op": { "type": "string", "enum": ["set_define", "write_file"] },
+          "file": { "type": "string" },
+          "name": { "type": "string" },
+          "value": { "type": ["string", "number"] },
+          "content": { "type": "string" }
+        }
+      }
+    },
+    "changed_files": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "build": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "notes": { "type": "string" }
+  }
+}

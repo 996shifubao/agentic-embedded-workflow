@@ -1,0 +1,18 @@
+diff --git a/Core/Src/adc.c b/Core/Src/adc.c
+index 1111111..2222222 100644
+--- a/Core/Src/adc.c
++++ b/Core/Src/adc.c
+@@ -10,6 +10,14 @@ void ADC_IRQHandler(void)
+ {
+     if (ADC1->ISR & ADC_ISR_EOC) {
+         raw = ADC1->DR;
+-        buf[idx++] = raw;
++        /* move sample point away from switching ringing */
++        delay_us(1200);
++        buf[idx++] = raw;
++        if (idx >= 8) {
++            idx = 0;
++        }
+     }
++    HAL_Delay(1);
+ }
