@@ -37,16 +37,19 @@ def main():
     ap.add_argument("--k", type=int, default=3)
     ap.add_argument("--cases")
     ap.add_argument("--index", default=None)
+    ap.add_argument("--mode", default="hybrid", choices=["hybrid", "lexical"],
+                    help="hybrid = BM25 + vector RRF (default); lexical = BM25 baseline")
     a = ap.parse_args()
 
     kb = KnowledgeBase(REPO, index_path=a.index)
     stats = kb.stats()
+    search = kb.search_hybrid if a.mode == "hybrid" else kb.search
 
     if a.cases:
         cases = (common.load_structured(a.cases) or {}).get("cases") or []
         details, hits_at_k, rr = [], 0, 0.0
         for case in cases:
-            hits = kb.search(case["query"], k=a.k)
+            hits = search(case["query"], k=a.k)
             rank = _rank(case, hits)
             hits_at_k += 1 if rank else 0
             rr += (1.0 / rank) if rank else 0.0
@@ -77,7 +80,7 @@ def main():
         common.emit(result)
         return 0
 
-    hits = kb.search(a.query or "", k=a.k)
+    hits = search(a.query or "", k=a.k)
     common.emit(
         {
             "tool": "kb_query",
