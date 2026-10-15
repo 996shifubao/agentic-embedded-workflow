@@ -15,11 +15,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Run evaluation harness
-        run: python tools/eval_runner.py --cases evals/test_cases.yaml --expected evals/expected_results.yaml
-
       - name: Build knowledge-base index
         run: python tools/kb_build.py
+
+      - name: Run evaluation harness
+        run: python tools/eval_runner.py --cases evals/test_cases.yaml --expected evals/expected_results.yaml
 
       - name: MCP tool-layer conformance
         run: python tools/mcp_call.py --check

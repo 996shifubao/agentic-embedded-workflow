@@ -185,6 +185,7 @@ Planner 只读、Tester/Reviewer 不能写文件、只有 Developer 能改代码
 
 ```bash
 git clone <this-repo> && cd agentic-embedded-workflow
+python tools/kb_build.py                                             # 首检：先建索引（生成物不入库）
 python tools/eval_runner.py --cases evals/test_cases.yaml --expected evals/expected_results.yaml
 ```
 

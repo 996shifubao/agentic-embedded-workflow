@@ -45,12 +45,21 @@ class KnowledgeBase:
 
     def load(self):
         if self.index is None:
-            if not os.path.exists(self.index_path):
-                raise FileNotFoundError(
-                    "knowledge index missing: run `python tools/kb_build.py` first"
-                )
-            with open(self.index_path, "r", encoding="utf-8") as f:
-                self.index = InvertedIndex.from_dict(json.load(f))
+            if os.path.exists(self.index_path):
+                with open(self.index_path, "r", encoding="utf-8") as f:
+                    self.index = InvertedIndex.from_dict(json.load(f))
+            else:
+                # Cold checkout (the index is generated, so it is git-ignored):
+                # build in-process instead of failing the whole run.
+                try:
+                    self.build()
+                except OSError:
+                    index = InvertedIndex()
+                    for rel in chunker.collect_sources(self.repo, None):
+                        for chunk in chunker.chunk_file(self.repo, rel):
+                            index.add(chunk)
+                    index.finalize()
+                    self.index = index
         return self.index
 
     # ---------- query ----------
