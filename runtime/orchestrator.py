@@ -54,7 +54,7 @@ class Tracer:
 
 
 def run(task_path, runtime_name, hardware_report, max_iterations, tool_layer="local", use_kb=True, kb_k=3,
-        use_memory=False, memory_k=3, approvals=()):
+        use_memory=False, memory_k=3, approvals=(), token_budget=60000):
     from runtime import policy
 
     # The orchestrator's own pipeline is human-launched (that is what the explicit
@@ -88,7 +88,18 @@ def run(task_path, runtime_name, hardware_report, max_iterations, tool_layer="lo
         "knowledge": [],
     }
     state = st.State.RECEIVED
-    tracer.log(state, "orchestrator", {"task": task["task_id"], "runtime": runtime.name})
+    # Cost governance: every agent call is estimated, routed and cached; the
+    # budget stops the run instead of quietly overspending.
+    from runtime.budget import Budget, PromptCache, wrap_runtime
+
+    budget = Budget(limit_tokens=token_budget)
+    cache = PromptCache()
+    runtime = wrap_runtime(
+        runtime, budget, cache,
+        on_event=lambda kind, data: tracer.log(state, kind, data),
+    )
+    tracer.log(state, "orchestrator", {"task": task["task_id"], "runtime": runtime.name,
+                                       "token_budget": token_budget})
 
     # ---------------- Planning ----------------
     state = _transition(state, st.State.PLANNING, tracer)
@@ -344,6 +355,8 @@ def main():
     ap.add_argument("--memory", action="store_true", help="inject past-run memory into planning")
     ap.add_argument("--memory-k", type=int, default=3)
     ap.add_argument("--approve", default="", help="extra tool approvals, e.g. run_script")
+    ap.add_argument("--token-budget", type=int, default=60000,
+                    help="hard token budget for one task (exceeding it fails the run)")
     a = ap.parse_args()
     try:
         code, result = run(
@@ -357,6 +370,7 @@ def main():
         use_memory=a.memory,
         memory_k=a.memory_k,
         approvals=[t for t in (a.approve or "").split(",") if t],
+        token_budget=a.token_budget,
         )
     except RuntimeUnavailable as e:
         print("[orchestrator] runtime unavailable: %s" % e)

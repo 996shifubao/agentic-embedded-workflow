@@ -31,6 +31,7 @@ RUNNERS = {
     "vector": "vector_eval.py",
     "memory": "memory_eval.py",
     "security": "policy_check.py",
+    "budget": "budget_check.py",
 }
 
 

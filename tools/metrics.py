@@ -48,6 +48,12 @@ def collect(repo):
         events = _read_jsonl(os.path.join(task_dir, "trace.jsonl"))
         durations = [e["duration_ms"] for e in events
                      if isinstance(e.get("duration_ms"), (int, float))]
+        cache_events = [e for e in events if e.get("actor") == "cache"]
+        budget_events = [e for e in events if e.get("actor") == "budget"]
+        cache_hits = sum(1 for e in cache_events
+                         if (e.get("payload") or {}).get("decision") == "hit")
+        budget_cost = sum(float((e.get("payload") or {}).get("cost_estimate_usd") or 0)
+                          for e in budget_events)
         chars = sum(len(json.dumps(e, ensure_ascii=False)) for e in events)
         tasks.append({
             "task_id": os.path.basename(task_dir),
@@ -64,6 +70,13 @@ def collect(repo):
             "tool_ms_mean": round(sum(durations) / len(durations), 1) if durations else 0.0,
             "trace_chars": chars,
             "tokens_est": int(chars / CHARS_PER_TOKEN),
+            "cache_hits": cache_hits,
+            "cache_calls": len(cache_events) + cache_hits,
+            "cost_estimate_usd": round(budget_cost, 6),
+            "budget_refusals": sum(1 for e in budget_events
+                                   if (e.get("payload") or {}).get("decision") == "refused"),
+            "routes": sorted({(e.get("payload") or {}).get("route") for e in budget_events
+                              if (e.get("payload") or {}).get("route")}),
         })
     return tasks
 
@@ -81,6 +94,10 @@ def summarize(tasks):
         "tokens_est_total": sum(t["tokens_est"] for t in tasks),
         "tokens_est_mean": int(sum(t["tokens_est"] for t in tasks) / len(tasks)) if tasks else 0,
         "errors": sum(t["errors"] for t in tasks),
+        "cache_hit_rate": round(
+            sum(t["cache_hits"] for t in tasks) / max(1, sum(t["cache_calls"] for t in tasks)), 4),
+        "cost_estimate_usd": round(sum(t["cost_estimate_usd"] for t in tasks), 6),
+        "budget_refusals": sum(t["budget_refusals"] for t in tasks),
     }
 
 
@@ -94,6 +111,9 @@ def write_markdown(path, tasks, summary):
         "- tool calls: %d (%.1f ms total)" % (summary["tool_calls"], summary["tool_ms_total"]),
         "- tokens (estimated): %d total, %d per task" % (summary["tokens_est_total"],
                                                          summary["tokens_est_mean"]),
+        "- prompt-cache hit rate: %.0f%% | cost estimate: $%.6f | budget refusals: %d"
+        % (100 * summary["cache_hit_rate"], summary["cost_estimate_usd"],
+           summary["budget_refusals"]),
         "",
         "| task | status | iterations | tool layer | tool calls | tool ms | tokens est | review |",
         "|---|---|---|---|---|---|---|---|",

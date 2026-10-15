@@ -207,3 +207,20 @@ cases:
       - path: metrics.audit_entries
         op: ge
         value: 3
+
+  - id: cost-001-budget-and-cache
+    layer: cost
+    name: 成本治理：路由、token 预算硬停、Prompt 缓存命中与费用估算
+    automated: true
+    runner: budget
+    args: []
+    expect:
+      - path: status
+        op: eq
+        value: PASS
+      - path: metrics.cache_hit_rate
+        op: ge
+        value: 0.5
+      - path: metrics.budget_refusals
+        op: ge
+        value: 1
